@@ -28,9 +28,9 @@ def SystemAlert():
     unix_yday = yday_time.strftime("%s")
     print unix_yday
     try:
-        username='apiuser'
-        password='yourpassword'
-        zabbix_url='http://10.42.0.180/zabbix/'
+        username='zabbixapi'
+        password='kainos2014'
+        zabbix_url='http://10.110.1.15/zabbix/'
         z=zabbix_api.ZabbixAPI(server=zabbix_url)
         z.login(user=username, password=password)
 
@@ -38,7 +38,8 @@ def SystemAlert():
         print "cannot connect.."
         sys.exit()
 
-    host_group = z.hostgroup.get({'filter':{'name':'Anorak Servers'},
+    #host_group = z.hostgroup.get({'filter':{'name':'Anorak Servers'},
+    host_group = z.hostgroup.get({'filter':{},
                                       'output':'extend',
                                      })
     fw=12
@@ -76,17 +77,43 @@ def SystemAlert():
                 for sp in shost_ip:
                     sp_ip = sp['ip']
                 count = count + 1
-                print (s['host'] +"    " +s['description'] + "")
+		print 'host id: ', s['hostid']
+		host_ev = z.host.get({'output':'extend','selectInventory':'extend' ,'filter':{'hostid':s['hostid']}})
+		print host_ev
+                for n in host_ev:
+		    print n
+		    if not n['inventory']:
+		        hostev_notes = 'NULL'
+                    else:
+                        hostev_notes = n['inventory']['notes']
+                        print hostev_notes
+		        if hostev_notes == "":
+                            hostev_notes = 'NULL'
+                        else:
+                            pass
+                print (hostev_notes +"    " +s['description'] + "")
                 lastT = datetime.datetime.fromtimestamp(int(s['lastchange'])).strftime('%Y-%m-%d %H:%M:%S')
-                eventS.rows.append([s['host'],sp_ip,s['description'],lastT])
+                eventS.rows.append([hostev_notes,sp_ip,s['description'],lastT])
             #print count
 
         for t in trigger_items:
             #print t['hostid']
             #print t['host']
             #print t['description']
-            host_ip = z.hostinterface.get({ 'output': 'extend',
+	    host_v = z.host.get({'selectInventory':'extend' ,'filter':{'hostid':t['hostid']}})
+	    for n in host_v:
+	        if not n['inventory']:
+	            host_notes = 'NULL'
+	        else:
+	            host_notes = n['inventory']['notes']
+		    print host_notes
+		    if host_notes == "":
+		        host_notes = 'NULL'
+		    else:
+		        pass
+	    host_ip = z.hostinterface.get({ 'output': 'extend',
                                     'filter':{'hostid':[t['hostid']]}})
+	    #print host_ip
             for h in host_ip:
                 ip_addr = h['ip']
                 #print ip_addr
@@ -100,11 +127,13 @@ def SystemAlert():
             h = "%.2f" % hours
             #if int(hours) > 1:
             if "1" in t['value']:
-                tableS.rows.append([t['host'],ip_addr,t['description'],lastC,str(h)])
+                tableS.rows.append([host_notes,ip_addr,t['description'],lastC,str(h)])
             else:
                 pass
-    recipients = ['systems@yourcompany.com']
-    sender = 'noreply@yourcompany.com'
+    recipients = ['k.shekhar@kainos.com','s.rayes@kainos.com','L.Kwasniewski@kainos.com','A.Canning@kainos.com','A.Cowan@kainos.com']
+    #recipients = ['k.shekhar@kainos.com']
+    #you = 'O2WifiSystemTeam@o2.com'
+    sender = 'noreply@kainos.com'
     msg = MIMEMultipart('alternative')
     msg['Subject'] = "Systems Hourly Summary Report"
     msg['From'] = sender
