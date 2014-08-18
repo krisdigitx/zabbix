@@ -130,10 +130,8 @@ def SystemAlert():
                 tableS.rows.append([host_notes,ip_addr,t['description'],lastC,str(h)])
             else:
                 pass
-    recipients = ['k.shekhar@kainos.com','s.rayes@kainos.com','L.Kwasniewski@kainos.com','A.Canning@kainos.com','A.Cowan@kainos.com']
-    #recipients = ['k.shekhar@kainos.com']
-    #you = 'O2WifiSystemTeam@o2.com'
-    sender = 'noreply@kainos.com'
+    recipients = ['you@company.com']
+    sender = 'noreply@company.com'
     msg = MIMEMultipart('alternative')
     msg['Subject'] = "Systems Hourly Summary Report"
     msg['From'] = sender
